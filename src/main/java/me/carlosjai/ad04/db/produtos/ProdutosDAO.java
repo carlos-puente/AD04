@@ -5,14 +5,13 @@
  */
 package me.carlosjai.ad04.db.produtos;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.List;
-import me.carlosjai.ad04.db.Conector;
 import me.carlosjai.ad04.obxectos.Produto;
+import me.carlosjai.ad04.util.HibernateUtil;
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 
 /**
  *
@@ -20,62 +19,54 @@ import me.carlosjai.ad04.obxectos.Produto;
  */
 public class ProdutosDAO {
 
-    protected static List<Produto> obterProdutos() throws SQLException, ClassNotFoundException {
-        Statement stmt = null;
-        Connection c = Conector.getConexion();
-        stmt = c.createStatement();
-        List<Produto> lp = new ArrayList<>();
-        String sql = "SELECT * FROM Produtos ORDER BY nome";
-
-        ResultSet s = stmt.executeQuery(sql);
-        while (s.next()) {
-            lp.add(new Produto(s.getString("nome"), s.getString("descripcion"), s.getDouble("prezo")));
-        }
-        c.close();
-        return lp;
+    protected static List<Produto> obterProdutos() throws HibernateException {
+        return HibernateUtil.createQuery("SELECT p FROM Produto p").list();
     }
 
-    protected static Produto obterProduto(String nomeProduto) throws SQLException, ClassNotFoundException {
-        Statement stmt = null;
-        Connection c = Conector.getConexion();
-        stmt = c.createStatement();
+    protected static Produto obterProduto(String nomeProduto) throws HibernateException {
         Produto p = null;
-        String sql = "SELECT * FROM Produtos WHERE nome='" + nomeProduto + "'";
-        ResultSet s = stmt.executeQuery(sql);
-        while (s.next()) {
-            p = new Produto(s.getString("nome"), s.getString("descripcion"), s.getDouble("prezo"));
-            break;
+        Query query = HibernateUtil.getSession().createQuery("SELECT p FROM Produto p WHERE p.nome=:nome");
+        query.setParameter("nome", nomeProduto);
+        List<Produto> l = query.list();
+        if (l != null && !l.isEmpty()) {
+            p = l.get(0);
         }
-        c.close();
         return p;
     }
 
-    protected static void insertarProduto(Produto p) throws SQLException, ClassNotFoundException {
-        Statement stmt = null;
-        Connection c = Conector.getConexion();
-        stmt = c.createStatement();
-        String sql = "INSERT INTO Produtos (nome, descripcion, prezo) VALUES ('" + p.getNome() + "' , '" + p.getDescripcion() + "', " + p.getPrezo() + ")";
-        stmt.executeUpdate(sql);
-        c.close();
+    protected static void insertarProduto(Produto p) throws HibernateException {
+        Transaction tran = null;
+        Session session = HibernateUtil.getSession();
+        tran = session.beginTransaction();
+        session.save(p);
+        tran.commit();
     }
 
-    protected static void actualizarProduto(String nomeProduto, Produto novaInfo) throws SQLException, ClassNotFoundException {
-        String sql = "UPDATE Produtos SET nome = '" + novaInfo.getNome() + "', descripcion = '" + novaInfo.getDescripcion() + "', prezo= " + novaInfo.getPrezo() + " WHERE nome='" + nomeProduto + "'";
-        Statement stmt = null;
-        Connection con = Conector.getConexion();
-        stmt = con.createStatement();
-        Conector.engadirPragma(stmt);
-        stmt.executeUpdate(sql);
-        con.close();
+    protected static void actualizarProduto(String nomeProduto, Produto p) throws HibernateException {
+        Transaction tran = null;
+        Session session = HibernateUtil.getSession();
+        tran = session.beginTransaction();
+        Query query = session.createQuery("UPDATE Produto set nome=:nome, descripcion=:descripcion, prezo=:prezo WHERE nome=:velloNome");
+        query.setParameter("nome", p.getNome());
+        query.setParameter("descripcion", p.getDescripcion());
+        query.setParameter("prezo", p.getPrezo());
+        query.setParameter("velloNome", nomeProduto);
+        tran.commit();
     }
 
-    protected static void eliminarProduto(String nomeProduto) throws SQLException, ClassNotFoundException {
-        String sql = "DELETE FROM Produtos WHERE nome='" + nomeProduto + "'";
-        Statement stmt = null;
-        Connection con = Conector.getConexion();
-        stmt = con.createStatement();
-        Conector.engadirPragma(stmt);
-        stmt.executeUpdate(sql);
-        con.close();
+    protected static void actualizarProduto(Produto p) throws HibernateException {
+        Transaction tran = null;
+        Session session = HibernateUtil.getSession();
+        tran = session.beginTransaction();
+        session.update(p);
+        tran.commit();
+    }
+
+    protected static void eliminarProduto(Produto p) throws HibernateException {
+        Transaction tran = null;
+        Session session = HibernateUtil.getSession();
+        tran = session.beginTransaction();
+        session.delete(p);
+        tran.commit();
     }
 }

@@ -5,16 +5,33 @@
  */
 package me.carlosjai.ad04.obxectos;
 
+import java.util.Objects;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
 /**
  *
  * @author carlos
  */
+@Entity
+@Table(name = "Provincia")
 public class Provincia {
+
+    @Id
+    @Column(name = "id")
     private String id;
+    @Column(name = "nome")
     private String nome;
 
+    public Provincia() {
+    }
+
+    
+    
     /**
-     * 
+     *
      * @param id - id da provincia
      * @param nome - nome da provincia
      */
@@ -43,8 +60,36 @@ public class Provincia {
     public String toString() {
         return "Provincia{" + "id=" + id + ", nome=" + nome + '}';
     }
-    
-    
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 97 * hash + Objects.hashCode(this.id);
+        hash = 97 * hash + Objects.hashCode(this.nome);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Provincia other = (Provincia) obj;
+        if (!Objects.equals(this.id, other.id)) {
+            return false;
+        }
+        if (!Objects.equals(this.nome, other.nome)) {
+            return false;
+        }
+        return true;
+    }
+
     
     
 }

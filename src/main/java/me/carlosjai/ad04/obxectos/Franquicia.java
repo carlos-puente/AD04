@@ -3,6 +3,7 @@ package me.carlosjai.ad04.obxectos;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import me.carlosjai.ad04.empregadoTenda.EmpregadoTenda;
 
 /**
  * Clase xeral da aplicación. Aquí atoparanse a lista de tendas e os clientes da
@@ -94,7 +95,7 @@ public class Franquicia implements Serializable {
             System.out.printf("%-25s %-30s %-30s %-15s %-10s\n", "Nome", "Cidade", "Provincia", "Empregados", "Produtos");
             System.out.println("-------------------------------------------------------------------------------------------------------------------");
             for (Tenda t : tendas) {
-                System.out.printf("%-25s %-30s %-30s %-15s %-10s\n", t.getNome(), t.getCidade(), t.getProvincia().getNome(), getNumEmpregadosTenda(t), t.getStockProdutos().size());
+                System.out.printf("%-25s %-30s %-30s %-15s %-10s\n", t.getNome(), t.getCidade(), t.getProvincia().getNome(), getNumEmpregadosTenda(t), getNumProdutosTenda(t));
 
             }
         }
@@ -219,28 +220,23 @@ public class Franquicia implements Serializable {
         return e;
     }
     
-     public int getNumEmpregadosTenda(Tenda t){
-         int num = 0;
-          for (Empregado e : empregados) {
-                    if (e.getHorasSemanaisPorTenda().containsKey(t)) {
-                     num++;  
-                    }
-                }
-          return num;
+     public int getNumEmpregadosTenda(Tenda t){                  
+          return t.getEmpregadoTenda().size();
      }
 
+     public int getNumProdutosTenda(Tenda t){                  
+          return t.getProdutoTenda().size();
+     }
     public void listarEmpregadosDeTenda(Tenda tenda) {
         if (tenda != null) {
             System.out.println("EMPREGADOS NA TENDA: " + tenda.getNome());
-            if (empregados.isEmpty() || tenda.getStockProdutos().isEmpty()) {
+            if (tenda.getEmpregadoTenda().isEmpty()) {
                 System.out.println("Non hai elementos rexistrados.");
             } else {
                 System.out.printf("%-25s %-30s %-10s %-10s\n", "Nome", "Apelidos", "nif", "horas");
                 System.out.println("--------------------------------------------------------------------------");
-                for (Empregado e : empregados) {
-                    if (e.getHorasSemanaisPorTenda().containsKey(tenda)) {
-                        System.out.printf("%-25s %-30s %-10s %-10s\n", e.getNome(), e.getApelidos(), e.getNif(), e.getHorasSemanaisPorTenda().get(tenda));
-                    }
+                for (EmpregadoTenda e : tenda.getEmpregadoTenda()) {                    
+                        System.out.printf("%-25s %-30s %-10s %-10s\n", e.getEmpregado().getNome(), e.getEmpregado().getApelidos(), e.getEmpregado().getNif(), e.getHorasSemanais());            
                 }
             }
         } else {

@@ -42,14 +42,15 @@ public class Menu {
                 System.out.println("2. Xestionar produtos");
                 System.out.println("3. Xestionar empregados");
                 System.out.println("4. Xestionar clientes");
-                System.out.println("5. Ver titulares de El País (online)");
+                System.out.println("5. Xerar informe de stock");
+                System.out.println("6. Ver titulares de El País (online)");
                 System.out.println("0. Saír");
                 do {
                     opcion = Util.pedirEnteiro("introduza unha opción: ");
-                    if (opcion < 0 || opcion > 5) {
-                        System.out.println("Error: introduza unha opción entre 0 e 5");
+                    if (opcion < 0 || opcion > 6) {
+                        System.out.println("Error: introduza unha opción entre 0 e 6");
                     }
-                } while (opcion < 0 || opcion > 5);
+                } while (opcion < 0 || opcion > 6);
                 switch (opcion) {
                     case 1:
                         menuTendas(f);
@@ -63,9 +64,12 @@ public class Menu {
                     case 4:
                         menuClientes(f);
                         break;
-                    case 5:
+                    case 6:
                         XestorRSS.amosarTitulares();
                         Util.pausa();
+                        break;
+                    case 5:
+                        XestorProdutos.xerarInformeStock(f);
                         break;
                     case 0:
                         System.out.println("Saíndo...");

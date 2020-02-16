@@ -6,7 +6,9 @@
 package me.carlosjai.ad04.util;
 
 import java.util.Properties;
+import me.carlosjai.ad04.empregadoTenda.EmpregadoTenda;
 import me.carlosjai.ad04.obxectos.*;
+import me.carlosjai.ad04.produtoTenda.ProdutoTenda;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -25,7 +27,7 @@ public class HibernateUtil {
     
     //Este método devolve a sesión para poder facer operacións coa base de datos
     public static SessionFactory getSessionFactory(){
-        
+
         //Se a sesion non se configurou, creamolo
         if(sessionFactory == null){
             try{
@@ -48,18 +50,21 @@ public class HibernateUtil {
                 settings.put(Environment.DIALECT,"org.hibernate.dialect.MySQL5Dialect");
                 
                 //Indicamos que se as táboas todas se borren e se volvan crear
-                settings.put(Environment.HBM2DDL_AUTO, "create-drop");
+                //settings.put(Environment.HBM2DDL_AUTO, "create-drop");
                 
                 //Indicamos que se mostre as operacións SQL que Hibernate leva a cabo
                 settings.put(Environment.SHOW_SQL, "true");
                 conf.setProperties(settings);
                 
                 //Engaidmos aquelas clases nas que queremos facer persistencia
+                conf.addAnnotatedClass(ProdutoTenda.class);
+                conf.addAnnotatedClass(EmpregadoTenda.class);
                 conf.addAnnotatedClass(Cliente.class);
                 conf.addAnnotatedClass(Empregado.class);
                 conf.addAnnotatedClass(Produto.class);
                 conf.addAnnotatedClass(Provincia.class);
                 conf.addAnnotatedClass(Tenda.class);
+                
                 
                 ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(conf.getProperties()).build();
                 sessionFactory = conf.buildSessionFactory(serviceRegistry);
@@ -70,6 +75,11 @@ public class HibernateUtil {
         return sessionFactory;
     }
     
+    public static void closeSession(){
+        sessionFactory.close();
+        sessionFactory = null;
+    };
+    
     public static Query createQuery(String query){
             return getSessionFactory().openSession().createQuery(query);
            
@@ -77,4 +87,5 @@ public class HibernateUtil {
     public static Session getSession(){
         return getSessionFactory().openSession();           
     }
+    
 }

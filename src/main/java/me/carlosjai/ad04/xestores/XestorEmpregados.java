@@ -5,15 +5,15 @@
  */
 package me.carlosjai.ad04.xestores;
 
-import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import me.carlosjai.ad04.db.empregados.EmpregadosAccessor;
-import me.carlosjai.ad04.db.horasEmpregadoTenda.HorasEmpregadoTendaAccessor;
+import me.carlosjai.ad04.db.tendas.TendasAccessor;
 import me.carlosjai.ad04.obxectos.Empregado;
 import me.carlosjai.ad04.obxectos.Franquicia;
 import me.carlosjai.ad04.obxectos.Tenda;
 import me.carlosjai.ad04.util.Util;
+import org.hibernate.HibernateException;
 
 /**
  *
@@ -36,9 +36,7 @@ public class XestorEmpregados {
                 EmpregadosAccessor.insertarEmpregado(e);
                 f.getEmpregados().add(e);
                 System.out.println("Empregado rexistrado correctamente.");
-            } catch (SQLException ex) {
-                Logger.getLogger(XestorEmpregados.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (ClassNotFoundException ex) {
+            } catch (HibernateException ex) {
                 Logger.getLogger(XestorEmpregados.class.getName()).log(Level.SEVERE, null, ex);
             }
 
@@ -47,7 +45,7 @@ public class XestorEmpregados {
     }
 
     public static void eliminarEmpregado(Franquicia f) {
-        if (f.getClientes() != null && !f.getClientes().isEmpty()) {
+        if (f.getEmpregados() != null && !f.getEmpregados().isEmpty()) {
             listarEmpregados(f);
             String nif = Util.pedirCadea("Introduza o nif do empregado a eliminar: ");
             Empregado e = f.getEmpregado(nif);
@@ -57,9 +55,7 @@ public class XestorEmpregados {
                         EmpregadosAccessor.eliminarEmpregado(nif);
                         f.getEmpregados().remove(e);
                         System.out.println("Empregado eliminado.");
-                    } catch (SQLException ex) {
-                        Logger.getLogger(XestorClientes.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (ClassNotFoundException ex) {
+                    } catch (HibernateException ex) {
                         Logger.getLogger(XestorClientes.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 } else {
@@ -84,19 +80,13 @@ public class XestorEmpregados {
                 Empregado e = pedirEmpregado(f, "", "introduza NIF do empregado a rexistrar: ");
                 if (e == null) {
                     System.out.println("Non existe un empregado có NIF especificado");
-                } else if (e.getHorasSemanaisPorTenda().containsKey(tenda)) {
+                } else if (tenda.getHorasEmpregado(e) != -1) {
                     System.out.println("Erro: O empregado xa existe na tenda");
                 } else {
-                    try {
-                        Double horas = Util.pedirDouble("introduza horas a rexistrar: ");
-                        HorasEmpregadoTendaAccessor.insertarHoras(e.getNif(), tenda.getNome(), horas);
-                        e.getHorasSemanaisPorTenda().put(tenda, horas);
-                        System.out.println("Empregado rexistrado correctamente, cunhas horas semanais de " + horas);
-                    } catch (SQLException ex) {
-                        Logger.getLogger(XestorTendas.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (ClassNotFoundException ex) {
-                        Logger.getLogger(XestorTendas.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                    int horasSemanais = Util.pedirEnteiro("Introduza horas semanais");
+                    tenda.addEmpregado(e, horasSemanais);
+                    TendasAccessor.actualizarTenda(tenda);
+                    System.out.println("Empregado rexistrado correctamente, cunhas horas semanais de " + horasSemanais);
                 }
             } else {
                 System.out.println("ERROR: A tenda solicitada non existe.");
@@ -115,19 +105,12 @@ public class XestorEmpregados {
                 Empregado e = pedirEmpregado(f, "", "introduza nif do empregado do que modificar horas: ");
                 if (e == null) {
                     System.out.println("Non existe un empregado có nif especificado");
-                } else if (!e.getHorasSemanaisPorTenda().containsKey(tenda)) {
+                } else if (tenda.getHorasEmpregado(e) == -1) {
                     System.out.println("Erro: O empregado non existe na tenda");
                 } else {
-                    try {
-                        Double horas = Util.pedirDouble("introduza horas a rexistrar: ");
-                        HorasEmpregadoTendaAccessor.actualizarHorasTenda(e.getNif(), tenda.getNome(), horas);
-                        e.getHorasSemanaisPorTenda().put(tenda, horas);
-                        System.out.println("Empregado actualizado correctamente, cunhas horas semanais de " + horas);
-                    } catch (SQLException ex) {
-                        Logger.getLogger(XestorTendas.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (ClassNotFoundException ex) {
-                        Logger.getLogger(XestorTendas.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                    int horasSemanais = Util.pedirEnteiro("Introduza horas semanais");
+                    tenda.addEmpregado(e, horasSemanais);
+                    TendasAccessor.actualizarTenda(tenda);
                 }
             } else {
                 System.out.println("ERROR: A tenda solicitada non existe.");
@@ -146,22 +129,15 @@ public class XestorEmpregados {
                 Empregado e = pedirEmpregado(f, "", "introduza nome do empregado do que eliminar horas: ");
                 if (e == null) {
                     System.out.println("Non existe un empregado có nome especificado");
-                } else if (!e.getHorasSemanaisPorTenda().containsKey(tenda)) {
+                } else if (false) {
                     System.out.println("Erro: O empregado non existe na tenda");
                 } else {
-                    try {
-                        if (Util.confirmar("Confirme o borrado de :" + e.getNif() + " na tenda: " + tenda.getNome())) {
-                            HorasEmpregadoTendaAccessor.eliminarHorasTenda(e.getNif(), tenda.getNome());
-                            e.getHorasSemanaisPorTenda().remove(tenda);
-                            System.out.println("Empregado eliminado correctamente da tenda.");
-                        } else {
-                            System.out.println("Borrado cancelado.");
-                        }
-
-                    } catch (SQLException ex) {
-                        Logger.getLogger(XestorEmpregados.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (ClassNotFoundException ex) {
-                        Logger.getLogger(XestorEmpregados.class.getName()).log(Level.SEVERE, null, ex);
+                    if (Util.confirmar("Confirme o borrado de :" + e.getNif() + " na tenda: " + tenda.getNome())) {
+                        tenda.removeEmpregado(e);
+                        TendasAccessor.actualizarTenda(tenda);
+                        System.out.println("Empregado eliminado correctamente da tenda.");
+                    } else {
+                        System.out.println("Borrado cancelado.");
                     }
                 }
             } else {

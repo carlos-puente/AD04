@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.util.List;
 import me.carlosjai.ad04.obxectos.Empregado;
 import me.carlosjai.ad04.obxectos.Tenda;
+import org.hibernate.HibernateException;
 
 /**
  *
@@ -16,23 +17,21 @@ import me.carlosjai.ad04.obxectos.Tenda;
  */
 public class EmpregadosAccessor {
 
-    public static List<Empregado> getEmpregados(List<Tenda> tendas) throws SQLException, ClassNotFoundException {
-        return EmpregadosDAO.getEmpregados(tendas);
+    public static List<Empregado> getEmpregados() throws HibernateException {
+        return EmpregadosDAO.getEmpregados();
     }
 
-    public static Empregado getEmpregado(String nif, List<Tenda> tendas) throws SQLException, ClassNotFoundException {
-        return EmpregadosDAO.getEmpregado(nif, tendas);
+    public static Empregado getEmpregado(String nif, List<Tenda> tendas) throws HibernateException {
+        return EmpregadosDAO.getEmpregado(nif);
     }
 
-    public static void insertarEmpregado(Empregado e) throws SQLException, ClassNotFoundException {
+    public static void insertarEmpregado(Empregado e) throws HibernateException {
         EmpregadosDAO.insertarEmpregado(e);
     }
 
-    public static void actualizarEmpregado(String nif, Empregado novaInfo) throws SQLException, ClassNotFoundException {
-        EmpregadosDAO.actualizarEmpregado(nif, novaInfo);
+    public static void actualizarEmpregado(String nif, Empregado novaInfo) throws HibernateException {
     }
 
-    public static void eliminarEmpregado(String nif) throws SQLException, ClassNotFoundException {
-        EmpregadosDAO.eliminarEmpregado(nif);
+    public static void eliminarEmpregado(String nif) throws HibernateException {
     }
 }

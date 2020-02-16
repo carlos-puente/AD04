@@ -21,9 +21,11 @@ public class Util {
      * Limpa a pantalla engadindo 1000 liñas en blanco
      */
     public static void limparPantalla() {
+        /**
         for (int i = 0; i < 1000; i++) {
             System.out.println("");
         }
+        * */
     }
 
     /**

@@ -5,16 +5,15 @@
  */
 package me.carlosjai.ad04.xestores;
 
-import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import me.carlosjai.ad04.db.stockProdutoTenda.StockProdutosTendasAccessor;
 import me.carlosjai.ad04.db.tendas.TendasAccessor;
 import me.carlosjai.ad04.obxectos.Franquicia;
 import me.carlosjai.ad04.obxectos.Produto;
 import me.carlosjai.ad04.obxectos.Provincia;
 import me.carlosjai.ad04.obxectos.Tenda;
 import me.carlosjai.ad04.util.Util;
+import org.hibernate.HibernateException;
 
 /**
  *
@@ -51,9 +50,7 @@ public class XestorTendas {
                 TendasAccessor.insertarTenda(t);
                 f.getTendas().add(t);
             }
-        } catch (SQLException ex) {
-            Logger.getLogger(XestorRSS.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
+        } catch (HibernateException ex) {
             Logger.getLogger(XestorRSS.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -70,12 +67,10 @@ public class XestorTendas {
             if (tenda != null) {
                 if (Util.confirmar("Confirme o borrado de :" + tenda.toString())) {
                     try {
-                        TendasAccessor.eliminarTenda(tenda.getNome());
+                        TendasAccessor.eliminarTenda(tenda);
                         System.out.println("Tenda " + tenda.getNome() + " eliminada");
                         f.getTendas().remove(tenda);
-                    } catch (SQLException ex) {
-                        Logger.getLogger(XestorRSS.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (ClassNotFoundException ex) {
+                    } catch (HibernateException ex) {
                         Logger.getLogger(XestorRSS.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
@@ -132,7 +127,7 @@ public class XestorTendas {
         if (!f.getTendas().isEmpty()) {
             Tenda tenda = pedirTenda(f, "", "Introduza o nome da tenda: ");
             if (tenda != null) {
-                if (tenda.getStockProdutos() == null || tenda.getStockProdutos().isEmpty()) {
+                if (!tenda.tenProdutos()) {
                     System.out.println("Non hai produtos rexistrados na tenda.");
                 } else {
                     tenda.listarProdutos();
@@ -157,19 +152,13 @@ public class XestorTendas {
                 Produto p = XestorProdutos.pedirProduto(f, "", "introduza nome do produto a engadir: ");
                 if (p == null) {
                     System.out.println("Non existe un produto có nome especificado");
-                } else if (tenda.getStockProdutos().containsKey(p)) {
+                } else if (tenda.getStockProduto(p) != -1) {
                     System.out.println("Erro: O produto xa existe na tenda");
                 } else {
-                    try {
-                        Double stock = Util.pedirDouble("introduza stock a rexistrar: ");
-                        StockProdutosTendasAccessor.insertarStock(p.getNome(), tenda.getNome(), stock);
-                        tenda.getStockProdutos().put(p, stock);
-                        System.out.println("Produto rexistrado correctamente, cun stock de " + stock);
-                    } catch (SQLException ex) {
-                        Logger.getLogger(XestorTendas.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (ClassNotFoundException ex) {
-                        Logger.getLogger(XestorTendas.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                    int stock = Util.pedirEnteiro("introduza stock a rexistrar: ");
+                    tenda.addProduto(p, stock);
+                    TendasAccessor.actualizarTenda(tenda);
+                    System.out.println("Produto rexistrado correctamente, cun stock de " + stock);
                 }
             } else {
                 System.out.println("ERROR: A tenda solicitada non existe.");
@@ -189,19 +178,15 @@ public class XestorTendas {
                 Produto p = XestorProdutos.pedirProduto(f, "", "introduza nome do produto a modificar stock: ");
                 if (p == null) {
                     System.out.println("Non existe un produto có nome especificado");
-                } else if (!tenda.getStockProdutos().containsKey(p)) {
+                } else if (tenda.getStockProduto(p) == -1) {
                     System.out.println("Erro: O produto non existe na tenda");
                 } else {
-                    try {
-                        Double stock = Util.pedirDouble("introduza stock a rexistrar: ");
-                        StockProdutosTendasAccessor.actualizarStockProdutoTenda(p.getNome(), tenda.getNome(), stock);
-                        tenda.getStockProdutos().put(p, stock);
-                        System.out.println("Produto rexistrado correctamente, cun stock de " + stock);
-                    } catch (SQLException ex) {
-                        Logger.getLogger(XestorTendas.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (ClassNotFoundException ex) {
-                        Logger.getLogger(XestorTendas.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                    int stock = Util.pedirEnteiro("introduza stock a rexistrar: ");
+                    tenda.addProduto(p, stock);
+                    System.out.println("tam_: "+tenda.getProdutoTenda().size());
+                    
+                    TendasAccessor.actualizarTenda(tenda);
+                    System.out.println("Produto actualizado correctamente, cun stock de " + stock);
                 }
             } else {
                 System.out.println("ERROR: A tenda solicitada non existe.");
@@ -221,7 +206,7 @@ public class XestorTendas {
                 Produto p = XestorProdutos.pedirProduto(f, "", "introduza nome do produto:");
                 if (p == null) {
                     System.out.println("Non existe un produto có nome especificado");
-                } else if (!tenda.getStockProdutos().containsKey(p)) {
+                } else if (tenda.getStockProduto(p) == -1) {
                     System.out.println("Erro: O produto non existe na tenda");
                 } else {
                     tenda.amosarStockProduto(p);
@@ -246,21 +231,15 @@ public class XestorTendas {
                 Produto p = XestorProdutos.pedirProduto(f, "", "introduza nome do produto a eliminar da tenda: ");
                 if (p == null) {
                     System.out.println("Non existe un produto có nome especificado");
-                } else if (!tenda.getStockProdutos().containsKey(p)) {
+                } else if (tenda.getStockProduto(p) == -1) {
                     System.out.println("Erro: O produto non existe na tenda");
                 } else {
-                    try {
-                        if (Util.confirmar("Confirme o borrado de :" + p.getNome() + " na tenda: " + tenda.getNome())) {
-                            StockProdutosTendasAccessor.eliminarStockProdutoTenda(p.getNome(), tenda.getNome());
-                            tenda.getStockProdutos().remove(p);
-                            System.out.println("Produto eliminado correctamente da tenda.");
-                        } else {
-                            System.out.println("Borrado cancelado.");
-                        }
-                    } catch (SQLException ex) {
-                        Logger.getLogger(XestorTendas.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (ClassNotFoundException ex) {
-                        Logger.getLogger(XestorTendas.class.getName()).log(Level.SEVERE, null, ex);
+                    if (Util.confirmar("Confirme o borrado de :" + p.getNome() + " na tenda: " + tenda.getNome())) {
+                        tenda.removeProduto(p);
+                        TendasAccessor.actualizarTenda(tenda);
+                        System.out.println("Produto eliminado correctamente da tenda.");
+                    } else {
+                        System.out.println("Borrado cancelado.");
                     }
                 }
             } else {
